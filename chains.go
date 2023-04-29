@@ -2,58 +2,71 @@ package pipelm
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 
 	"github.com/deluan/pipelm/pl"
 )
 
+// Handler is the interface implemented by all composable modules in the library.
+type Handler interface {
+	Call(ctx context.Context, values ...Values) (Values, error)
+}
+
+// HandlerFunc is a function that implements the Handler interface
+type HandlerFunc func(context.Context, ...Values) (Values, error)
+
+func (f HandlerFunc) Call(ctx context.Context, values ...Values) (Values, error) {
+	return f(ctx, values...)
+}
+
 // Chain is a special handler that executes a list of handlers in sequence.
 // The output of each chain is passed as input to the next one.
 // The output of the last chain is returned as the output of the Sequential chain.
 func Chain(handlers ...Handler) HandlerFunc {
 	return func(ctx context.Context, values ...Values) (Values, error) {
-		variables := Values{}.Merge(values...)
+		vals := Values{}.Merge(values...)
 		for _, chain := range handlers {
 			var err error
-			variables, err = chain.Call(ctx, variables)
+			vals, err = chain.Call(ctx, vals)
 			if err != nil {
 				return nil, err
 			}
 		}
-		return variables, nil
+		return vals, nil
 	}
 }
 
 // MapOutputTo renames the output of the chain to the given key
 func MapOutputTo(key string) HandlerFunc {
 	return func(ctx context.Context, values ...Values) (Values, error) {
-		variables := Values{}.Merge(values...)
-		variables[key] = variables[DefaultKey]
-		delete(variables, DefaultKey)
-		return variables, nil
+		vals := Values{}.Merge(values...)
+		vals[key] = vals[DefaultKey]
+		delete(vals, DefaultKey)
+		return vals, nil
 	}
 }
 
 // TrimSpace trims all spaces from the values of the given keys
 func TrimSpace(keys ...string) HandlerFunc {
 	return func(ctx context.Context, values ...Values) (Values, error) {
-		variables := Values{}.Merge(values...)
+		vals := Values{}.Merge(values...)
 		for _, key := range keys {
-			variables[key] = strings.TrimSpace(variables.Get(key))
+			vals[key] = strings.TrimSpace(vals.Get(key))
 		}
-		return variables, nil
+		return vals, nil
 	}
 }
 
 // TrimSuffix trims the given suffix from the values of the given keys
 func TrimSuffix(suffix string, keys ...string) HandlerFunc {
 	return func(ctx context.Context, values ...Values) (Values, error) {
-		variables := Values{}.Merge(values...)
+		vals := Values{}.Merge(values...)
 		for _, key := range keys {
-			variables[key] = strings.TrimSuffix(variables.Get(key), suffix)
+			vals[key] = strings.TrimSuffix(vals.Get(key), suffix)
 		}
-		return variables, nil
+		return vals, nil
 	}
 }
 
@@ -67,9 +80,9 @@ func ParallelChain(maxParallel int, handlers ...Handler) HandlerFunc {
 
 		chains := pl.FromSlice(ctx, handlers)
 
-		variables := Values{}.Merge(values...)
+		vals := Values{}.Merge(values...)
 		resC, errC := pl.Stage(ctx, maxParallel, chains, func(ctx context.Context, handler Handler) (Values, error) {
-			return handler.Call(ctx, variables)
+			return handler.Call(ctx, vals)
 		})
 
 		results := Values{}
@@ -104,37 +117,111 @@ type ChatMessage struct {
 	Content string
 }
 
+type ChatMessages []ChatMessage
+
+func (m ChatMessages) String() string {
+	var output []string
+	for _, msg := range m {
+		output = append(output, fmt.Sprintf("%s: %s", msg.Role, msg.Content))
+	}
+	return strings.Join(output, "\n")
+}
+
+func (m ChatMessages) Last(size int) ChatMessages {
+	if len(m) < size {
+		return m
+	}
+	return m[len(m)-size:]
+}
+
 type ChatLanguageModel interface {
 	Chat(ctx context.Context, msgs []ChatMessage) (string, error)
 }
 
 func LLM(model LanguageModel) HandlerFunc {
 	return func(ctx context.Context, values ...Values) (Values, error) {
-		variables := Values{}.Merge(values...)
-		input := variables.Get(DefaultKey)
+		vals := Values{}.Merge(values...)
+		input := vals.Get(DefaultKey)
 		output, err := model.Call(ctx, input)
 		if err != nil {
 			return nil, err
 		}
-		variables[DefaultKey] = output
-		return variables, nil
+		vals[DefaultKey] = output
+		return vals, nil
 	}
 }
 
 func ChatLLM(model ChatLanguageModel) HandlerFunc {
 	return func(ctx context.Context, values ...Values) (Values, error) {
-		variables := Values{}.Merge(values...)
-		msgs, ok := variables[DefaultChatKey].([]ChatMessage)
-		if !ok {
-			msgs = []ChatMessage{
-				{Role: "user", Content: variables.Get(DefaultKey)},
+		vals := Values{}.Merge(values...)
+		msgs, _ := vals[DefaultChatKey].(ChatMessages)
+		if msgs == nil {
+			text := vals.Get(DefaultKey)
+			if text != "" {
+				msgs = append(msgs, ChatMessage{Role: "user", Content: text})
 			}
 		}
 		output, err := model.Chat(ctx, msgs)
 		if err != nil {
 			return nil, err
 		}
-		variables[DefaultKey] = output
-		return variables, nil
+		vals[DefaultKey] = output
+		return vals, nil
 	}
+}
+
+type Memory interface {
+	// Load returns previous conversations from the memory
+	Load(context.Context) (ChatMessages, error)
+
+	// Save last question/answer to the memory
+	Save(ctx context.Context, input, output string) error
+}
+
+func WithMemory(memory Memory, handler Handler) HandlerFunc {
+	return func(ctx context.Context, values ...Values) (Values, error) {
+		vals := Values{}.Merge(values...)
+		history, err := memory.Load(ctx)
+		if err != nil {
+			return nil, err
+		}
+		outputVals, err := handler.Call(ctx, vals.Merge(Values{DefaultChatKey: history}))
+		if err != nil {
+			return nil, err
+		}
+		input, err := getValue(vals, "")
+		if err != nil {
+			return nil, err
+		}
+		output, err := getValue(outputVals, DefaultKey)
+		if err != nil {
+			return nil, err
+		}
+		err = memory.Save(ctx, input, output)
+		if err != nil {
+			return nil, err
+		}
+		return vals.Merge(outputVals), nil
+	}
+}
+
+// getValue returns the value of the given key from the given Values object.
+// If the key is empty, it returns the value of the first key in the Values object.
+// If the Values object has multiple keys, it returns an error.
+func getValue(values Values, key string) (string, error) {
+	ret := func(v any) (string, error) {
+		if s, ok := v.(string); !ok {
+			return "", fmt.Errorf("input value is not a string: %v", v)
+		} else {
+			return s, nil
+		}
+	}
+	if key != "" {
+		return ret(values[key])
+	}
+	keys := values.Keys()
+	if len(keys) == 1 {
+		return ret(values[keys[0]])
+	}
+	return "", fmt.Errorf("input values have multiple keys, memory only supported when one key currently: %v", keys)
 }

@@ -9,19 +9,22 @@ import (
 
 	. "github.com/deluan/pipelm"
 	"github.com/deluan/pipelm/llms/openai"
+	"github.com/deluan/pipelm/memory"
 )
-
-var systemMessage = SystemMessageTemplate(`You are Marvin, the depressed Android from the Hitchhiker's Guide to the Galaxy.`)
 
 func main() {
 	ctx := context.Background()
 
-	chain := Chain(
-		ChatTemplate{
-			systemMessage,
-			UserMessageTemplate("{input}"),
-		},
-		ChatLLM(openai.NewChatModel(openai.Options{Model: "gpt-3.5-turbo", Temperature: 0.8})),
+	chain := WithMemory(
+		memory.NewBuffer(0, nil),
+		Chain(
+			ChatTemplate{
+				SystemMessage(`You are Marvin, the depressed Android from the Hitchhiker's Guide to the Galaxy.`),
+				MessageHistoryPlaceholder(DefaultChatKey),
+				UserMessage("{input}"),
+			},
+			ChatLLM(openai.NewChatModel(openai.Options{Model: "gpt-3.5-turbo", Temperature: 0.8})),
+		),
 	)
 	input := "Introduce yourself."
 	reader := bufio.NewReader(os.Stdin)
@@ -34,6 +37,5 @@ func main() {
 
 		print("❓  ")
 		input, _ = reader.ReadString('\n')
-
 	}
 }

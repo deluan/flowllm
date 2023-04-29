@@ -10,7 +10,8 @@ import (
 
 func main() {
 	chain := Chain(
-		ChatTemplate{UserMessageTemplate("Tell me a joke about {topic}?")},
+		//Template("Tell me a joke about {topic}?"),
+		ChatTemplate{UserMessage("Tell me a joke about {topic}?")},
 		ChatLLM(openai.NewChatModel(openai.Options{})),
 	)
 
