@@ -8,7 +8,11 @@ import (
 	"github.com/deluan/pipelm/llms/openai"
 )
 
-func main() {
+func init() {
+	registerExample("multi_stage", "A multi-stage pipeline, showcasing sequential and parallel chains", multiStage)
+}
+
+func multiStage() {
 	chain := Chain(
 		ParallelChain(
 			2,

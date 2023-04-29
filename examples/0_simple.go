@@ -8,7 +8,11 @@ import (
 	"github.com/deluan/pipelm/llms/openai"
 )
 
-func main() {
+func init() {
+	registerExample("simple", "A simple example with only one chain", simple)
+}
+
+func simple() {
 	chain := Chain(
 		//Template("Tell me a joke about {topic}?"),
 		ChatTemplate{UserMessage("Tell me a joke about {topic}?")},

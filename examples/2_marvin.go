@@ -12,7 +12,10 @@ import (
 	"github.com/deluan/pipelm/memory"
 )
 
-func main() {
+func init() {
+	registerExample("marvin", "A simple chatbot using the GPT-3.5 model, using memory to store the conversation history", marvin)
+}
+func marvin() {
 	ctx := context.Background()
 
 	chain := WithMemory(
