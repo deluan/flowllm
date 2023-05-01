@@ -23,7 +23,7 @@ func main() {
 		println("usage: examples <example_number>")
 		println("available examples:")
 		for i, e := range examples {
-			fmt.Printf("  %d) %s: %s\n", i, e.name, e.description)
+			fmt.Printf(" %d) %-20s - %s\n", i, e.name, e.description)
 		}
 		os.Exit(0)
 	}

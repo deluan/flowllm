@@ -11,7 +11,7 @@ import (
 )
 
 func init() {
-	registerExample("vector_store_memory", "InMemory Vector Store", vectorStoreMemory)
+	registerExample("vectorstore_memory", "InMemory Vector Store", vectorStoreMemory)
 }
 
 func vectorStoreMemory() {

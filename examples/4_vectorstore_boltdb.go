@@ -11,7 +11,7 @@ import (
 )
 
 func init() {
-	registerExample("vector_store_boltdb", "Vector Store with BoltDB", vectorStoreBoltDB)
+	registerExample("vectorstore_boltdb", "Vector Store with BoltDB", vectorStoreBoltDB)
 }
 
 func vectorStoreBoltDB() {
