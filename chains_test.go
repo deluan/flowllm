@@ -95,7 +95,6 @@ var _ = Describe("Handlers", func() {
 			chain := ParallelChain(2, handler1, handler2)
 
 			go func() {
-				defer GinkgoRecover()
 				// Wait for both handlers to start
 				<-started
 				<-started
@@ -139,6 +138,105 @@ var _ = Describe("Handlers", func() {
 			_, err := chain.Call(ctx)
 			Expect(err).To(MatchError(context.DeadlineExceeded))
 		})
+	})
 
+	Describe("WithMemory", func() {
+		It("should load previous conversations, call the wrapped handler, and save the last question/answer", func() {
+			memory := &fakeMemory{
+				ChatMessages: ChatMessages{{"user", "previous conversation"}},
+			}
+			handler := HandlerFunc(func(ctx context.Context, values ...Values) (Values, error) {
+				Expect(values).To(HaveLen(1))
+				Expect(values[0]).To(HaveKeyWithValue(DefaultKey, "input"))
+				Expect(values[0]).To(HaveKeyWithValue(DefaultChatKey, ChatMessages{{"user", "previous conversation"}}))
+				return Values{DefaultKey: "output"}, nil
+			})
+			chain := WithMemory(memory, handler)
+
+			result, err := chain.Call(context.Background(), Values{DefaultKey: "input"})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result).To(HaveKeyWithValue(DefaultKey, "output"))
+			Expect(memory.ChatMessages).To(Equal(ChatMessages{
+				{"user", "previous conversation"},
+				{"user", "input"},
+				{"assistant", "output"},
+			}))
+		})
+
+		It("should return an error if loading from memory fails", func() {
+			memory := &fakeMemory{
+				LoadErr: errors.New("load error"),
+			}
+			handler := HandlerFunc(func(ctx context.Context, values ...Values) (Values, error) {
+				return Values{DefaultKey: "output"}, nil
+			})
+			chain := WithMemory(memory, handler)
+
+			result, err := chain.Call(context.Background(),
+				Values{DefaultKey: "input"})
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(Equal("load error"))
+			Expect(result).To(BeNil())
+		})
+
+		It("should return an error if saving to memory fails", func() {
+			memory := &fakeMemory{
+				SaveErr: errors.New("save error"),
+			}
+			handler := HandlerFunc(func(ctx context.Context, values ...Values) (Values, error) {
+				return Values{DefaultKey: "output"}, nil
+			})
+			chain := WithMemory(memory, handler)
+
+			result, err := chain.Call(context.Background(), Values{DefaultKey: "input"})
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(Equal("save error"))
+			Expect(result).To(BeNil())
+		})
+
+		It("should return an error if input value is not a string", func() {
+			memory := &fakeMemory{}
+			handler := HandlerFunc(func(ctx context.Context, values ...Values) (Values, error) {
+				return Values{DefaultKey: "output"}, nil
+			})
+			chain := WithMemory(memory, handler)
+
+			result, err := chain.Call(context.Background(), Values{DefaultKey: 123})
+			Expect(err).To(HaveOccurred())
+			Expect(result).To(BeNil())
+		})
+
+		It("should return an error if output value is not a string", func() {
+			memory := &fakeMemory{}
+			handler := HandlerFunc(func(ctx context.Context, values ...Values) (Values, error) {
+				return Values{DefaultKey: 123}, nil
+			})
+			chain := WithMemory(memory, handler)
+
+			result, err := chain.Call(context.Background(), Values{DefaultKey: "input"})
+			Expect(err).To(HaveOccurred())
+			Expect(result).To(BeNil())
+		})
 	})
 })
+
+type fakeMemory struct {
+	ChatMessages ChatMessages
+	SaveErr      error
+	LoadErr      error
+}
+
+func (m *fakeMemory) Load(ctx context.Context) (ChatMessages, error) {
+	if m.LoadErr != nil {
+		return nil, m.LoadErr
+	}
+	return m.ChatMessages, nil
+}
+
+func (m *fakeMemory) Save(ctx context.Context, input, output string) error {
+	if m.SaveErr != nil {
+		return m.SaveErr
+	}
+	m.ChatMessages = append(m.ChatMessages, ChatMessage{Role: "user", Content: input}, ChatMessage{Role: "assistant", Content: output})
+	return nil
+}
