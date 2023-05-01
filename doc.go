@@ -3,6 +3,6 @@
 // and access Vector Stores. The package also includes parsers and database integrations, making it an
 // ideal solution for developers working with language models.
 //
-// This package heavily inspired by the langchain project, but tries to be more idiomatic for Go projects.
+// This package is heavily inspired by the LangChain project, but tries to be more idiomatic for Go projects.
 
 package pipelm

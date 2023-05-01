@@ -7,7 +7,6 @@ import (
 	"github.com/deluan/pipelm"
 	"github.com/deluan/pipelm/llms/openai"
 	"github.com/deluan/pipelm/loaders"
-	"github.com/deluan/pipelm/splitters"
 	"github.com/deluan/pipelm/vectorstores"
 )
 
@@ -21,7 +20,7 @@ func vectorStoreMemory() {
 	//Create docs with a loader
 	loader := loaders.TextFile(
 		"testdata/state_of_the_union.txt",
-		splitters.RecursiveCharacterText(splitters.Options{ChunkSize: 100, ChunkOverlap: 10}),
+		pipelm.RecursiveTextSplitter(pipelm.SplitterOptions{ChunkSize: 100, ChunkOverlap: 10}),
 	)
 
 	// Create a vector store

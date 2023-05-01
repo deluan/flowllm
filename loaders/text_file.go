@@ -34,7 +34,7 @@ func TextFile(path string, splitter ...pipelm.Splitter) pipelm.DocumentLoaderFun
 		metadata := map[string]any{"source": path}
 		docs = []pipelm.Document{{PageContent: string(text), Metadata: metadata}}
 
-		// Split if needed
+		// Use splitter if provided
 		if spl != nil {
 			docs, err = SplitDocuments(splitter[0], docs)
 			if err != nil {
