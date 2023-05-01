@@ -7,6 +7,9 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+// Memory is a simple in-memory vector store. It implements the VectorStore interface and
+// stores the vectors in memory. It is not meant to be used in production, but it is useful
+// for testing and as an example of how to implement a VectorStore.
 type Memory struct {
 	embeddings pipelm.Embeddings
 	data       []memoryItem
@@ -18,6 +21,7 @@ type memoryItem struct {
 	metadata map[string]any
 }
 
+// NewMemoryVectorStore creates a new Memory vector store.
 func NewMemoryVectorStore(embeddings pipelm.Embeddings) *Memory {
 	return &Memory{
 		embeddings: embeddings,

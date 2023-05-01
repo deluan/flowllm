@@ -12,8 +12,10 @@ const (
 	DefaultChatKey = "_chat_messages"
 )
 
+// Values is a map of string to any value. This is the type used to pass values between handlers.
 type Values map[string]any
 
+// Merge merges multiple Values into one.
 func (value Values) Merge(values ...Values) Values {
 	res := Values{}
 	for k, v := range value {
@@ -27,6 +29,7 @@ func (value Values) Merge(values ...Values) Values {
 	return res
 }
 
+// Get returns the value for a given key as a string. If the key does not exist, it returns an empty string.
 func (value Values) Get(key string) string {
 	v, ok := value[key]
 	if !ok {
@@ -35,10 +38,13 @@ func (value Values) Get(key string) string {
 	return fmt.Sprintf("%v", v)
 }
 
+// Keys returns the keys of the Values object.
 func (value Values) Keys() []string {
 	return maps.Keys(value)
 }
 
+// String returns a string representation of the Values object. If the Values object has only one key,
+// it returns the value of that key. If the Values object has multiple keys, it returns a JSON representation.
 func (value Values) String() string {
 	if len(value) == 0 {
 		return ""
@@ -53,8 +59,4 @@ func (value Values) String() string {
 	}
 	j, _ := json.MarshalIndent(value, "", "  ")
 	return string(j)
-}
-
-func Input(s string) Values {
-	return Values{DefaultKey: s}
 }

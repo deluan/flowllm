@@ -14,7 +14,7 @@ type Handler interface {
 	Call(ctx context.Context, values ...Values) (Values, error)
 }
 
-// HandlerFunc is a function that implements the Handler interface
+// HandlerFunc is a function that implements the Handler interface.
 type HandlerFunc func(context.Context, ...Values) (Values, error)
 
 func (f HandlerFunc) Call(ctx context.Context, values ...Values) (Values, error) {
@@ -38,7 +38,7 @@ func Chain(handlers ...Handler) HandlerFunc {
 	}
 }
 
-// MapOutputTo renames the output of the chain to the given key
+// MapOutputTo renames the output of the chain (DefaultKey) to the given key.
 func MapOutputTo(key string) HandlerFunc {
 	return func(ctx context.Context, values ...Values) (Values, error) {
 		vals := Values{}.Merge(values...)
@@ -48,7 +48,7 @@ func MapOutputTo(key string) HandlerFunc {
 	}
 }
 
-// TrimSpace trims all spaces from the values of the given keys
+// TrimSpace trims all spaces from the values of the given keys.
 func TrimSpace(keys ...string) HandlerFunc {
 	return func(ctx context.Context, values ...Values) (Values, error) {
 		vals := Values{}.Merge(values...)
@@ -59,7 +59,7 @@ func TrimSpace(keys ...string) HandlerFunc {
 	}
 }
 
-// TrimSuffix trims the given suffix from the values of the given keys
+// TrimSuffix trims the given suffix from the values of the given keys.
 func TrimSuffix(suffix string, keys ...string) HandlerFunc {
 	return func(ctx context.Context, values ...Values) (Values, error) {
 		vals := Values{}.Merge(values...)
@@ -108,36 +108,12 @@ func ParallelChain(maxParallel int, handlers ...Handler) HandlerFunc {
 	}
 }
 
+// LanguageModel interface is implemented by all language models.
 type LanguageModel interface {
 	Call(ctx context.Context, input string) (string, error)
 }
 
-type ChatMessage struct {
-	Role    string
-	Content string
-}
-
-type ChatMessages []ChatMessage
-
-func (m ChatMessages) String() string {
-	var output []string
-	for _, msg := range m {
-		output = append(output, fmt.Sprintf("%s: %s", msg.Role, msg.Content))
-	}
-	return strings.Join(output, "\n")
-}
-
-func (m ChatMessages) Last(size int) ChatMessages {
-	if len(m) < size {
-		return m
-	}
-	return m[len(m)-size:]
-}
-
-type ChatLanguageModel interface {
-	Chat(ctx context.Context, msgs []ChatMessage) (string, error)
-}
-
+// LLM is a handler that can be used to add a language model to a chain.
 func LLM(model LanguageModel) HandlerFunc {
 	return func(ctx context.Context, values ...Values) (Values, error) {
 		vals := Values{}.Merge(values...)
@@ -151,6 +127,40 @@ func LLM(model LanguageModel) HandlerFunc {
 	}
 }
 
+// ChatMessage is a struct that represents a message in a chat conversation.
+type ChatMessage struct {
+	Role    string
+	Content string
+}
+
+// ChatMessages is a list of ChatMessage.
+type ChatMessages []ChatMessage
+
+func (m ChatMessages) String() string {
+	var output []string
+	for _, msg := range m {
+		output = append(output, fmt.Sprintf("%s: %s", msg.Role, msg.Content))
+	}
+	return strings.Join(output, "\n")
+}
+
+// Last returns the last N messages from the list.
+func (m ChatMessages) Last(size int) ChatMessages {
+	if len(m) < size {
+		return m
+	}
+	return m[len(m)-size:]
+}
+
+// ChatLanguageModel interface is implemented by all chat language models.
+type ChatLanguageModel interface {
+	Chat(ctx context.Context, msgs []ChatMessage) (string, error)
+}
+
+// ChatLLM is a handler that can be used to add a chat model to a chain.
+// It is similar to the LLM handler, but it has a few differences:
+// It will use the value of the DefaultChatKey key (usually set by the ChatTemplate) as input
+// to the model, if available. If not, it will use the value of the DefaultKey key.
 func ChatLLM(model ChatLanguageModel) HandlerFunc {
 	return func(ctx context.Context, values ...Values) (Values, error) {
 		vals := Values{}.Merge(values...)
@@ -170,6 +180,7 @@ func ChatLLM(model ChatLanguageModel) HandlerFunc {
 	}
 }
 
+// Memory is an interface that can be used to store and retrieve previous conversations.
 type Memory interface {
 	// Load returns previous conversations from the memory
 	Load(context.Context) (ChatMessages, error)
@@ -178,6 +189,9 @@ type Memory interface {
 	Save(ctx context.Context, input, output string) error
 }
 
+// WithMemory is a wrapper that loads the previous conversation from the memory,
+// injects it into the chain as the value of the DefaultChatKey key, calls the wrapped handler,
+// and adds the last question/answer to the memory.
 func WithMemory(memory Memory, handler Handler) HandlerFunc {
 	return func(ctx context.Context, values ...Values) (Values, error) {
 		vals := Values{}.Merge(values...)

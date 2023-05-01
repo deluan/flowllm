@@ -11,6 +11,7 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+// Options for the Pinecone vector store.
 type Options struct {
 	ApiKey      string
 	Environment string
@@ -22,12 +23,15 @@ type Options struct {
 	Metric      Metric
 }
 
+// VectorStore is a vector store backed by Pinecone. It requires an already created Pinecone index,
+// with the same dimensionality as the embeddings used to create the store.
 type VectorStore struct {
 	client     *client
 	embeddings pipelm.Embeddings
 	textKey    string
 }
 
+// NewVectorStore creates a new Pinecone vector store.
 func NewVectorStore(ctx context.Context, embeddings pipelm.Embeddings, opts Options) (*VectorStore, error) {
 	if opts.ApiKey == "" {
 		opts.ApiKey = os.Getenv("PINECONE_API_KEY")

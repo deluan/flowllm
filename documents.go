@@ -18,29 +18,36 @@ type VectorStore interface {
 	SimilaritySearchVectorWithScore(ctx context.Context, query []float32, k int) ([]ScoredDocument, error)
 }
 
+// Document represents a document to be stored in a VectorStore.
 type Document struct {
 	ID          string
 	PageContent string
 	Metadata    map[string]any
 }
 
+// ScoredDocument represents a document along with its similarity score.
 type ScoredDocument struct {
 	Document
 	Score float32
 }
 
+// Splitter is a function that splits a string into a slice of strings.
 type Splitter = func(string) ([]string, error)
 
+// DocumentLoader is the interface implemented by types that can load documents.
+// The LoadNext method should the next available document, or io.EOF if there are no more documents.
 type DocumentLoader interface {
 	LoadNext(ctx context.Context) (Document, error)
 }
 
+// DocumentLoaderFunc is an adapter to allow the use of ordinary functions as DocumentLoaders.
 type DocumentLoaderFunc func(ctx context.Context) (Document, error)
 
 func (f DocumentLoaderFunc) LoadNext(ctx context.Context) (Document, error) {
 	return f(ctx)
 }
 
+// LoadDocs loads the next n documents from the given DocumentLoader.
 func LoadDocs(n int, loader DocumentLoader) ([]Document, error) {
 	ctx := context.Background()
 	var docs []Document

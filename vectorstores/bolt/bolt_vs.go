@@ -20,6 +20,7 @@ const (
 	DefaultPermission = 0600
 )
 
+// Options for the Bolt vector store.
 type Options struct {
 	Path       string
 	Bucket     string
@@ -27,12 +28,15 @@ type Options struct {
 	Timeout    time.Duration
 }
 
+// VectorStore is a vector store backed by BoltDB. It implements the pipelm.VectorStore interface,
+// and it is ideal for small to medium-sized collections of vectors.
 type VectorStore struct {
 	embeddings pipelm.Embeddings
 	db         *bbolt.DB
 	bucket     string
 }
 
+// NewVectorStore creates a new Bolt vector store.
 func NewVectorStore(embeddings pipelm.Embeddings, opts Options) (*VectorStore, func(), error) {
 	if opts.Path == "" {
 		opts.Path = DefaultPath
