@@ -3,7 +3,6 @@ package pipelm
 import (
 	"context"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/deluan/pipelm/pl"
@@ -85,26 +84,27 @@ func ParallelChain(maxParallel int, handlers ...Handler) HandlerFunc {
 			return handler.Call(ctx, vals)
 		})
 
+		finalErrC := make(chan error)
+		go func() {
+			for err := range pl.ReadOrDone(ctx, errC) {
+				if err != nil {
+					finalErrC <- err
+					cancel()
+					return
+				}
+			}
+			finalErrC <- nil
+		}()
+
 		results := Values{}
 		for res := range pl.ReadOrDone(ctx, resC) {
 			results = results.Merge(res)
 		}
 
-		var fatalErr error
-		for err := range pl.ReadOrDone(ctx, errC) {
-			if err != nil {
-				log.Printf("Error: %v", err)
-				cancel()
-				fatalErr = err
-				break
-			}
+		if err := <-finalErrC; err != nil {
+			return nil, err
 		}
-		if fatalErr != nil {
-			return nil, fatalErr
-		}
-		<-resC
-
-		return results, nil
+		return results, ctx.Err()
 	}
 }
 
