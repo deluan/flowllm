@@ -6,9 +6,9 @@ import (
 )
 
 var (
-	defaultSplitterChunkSize    = 1000
-	defaultSplitterChunkOverlap = 200
-	defaultSplitterSeparators   = []string{"\n\n", "\n", " ", ""}
+	defaultSplitterChunkSize  = 1000
+	defaultSplitterLenFunc    = func(s string) int { return len(s) }
+	defaultSplitterSeparators = []string{"\n\n", "\n", " ", ""}
 )
 
 // SplitterOptions for the RecursiveTextSplitter splitter
@@ -17,6 +17,8 @@ type SplitterOptions struct {
 	ChunkSize int
 	// ChunkOverlap is the number of characters that will be repeated in each
 	ChunkOverlap int
+	// LenFunc is the length function to be used to calculate the chunk size
+	LenFunc func(string) int
 	// Separators is a list of strings that will be used to split the text
 	Separators []string
 }
@@ -31,8 +33,8 @@ func RecursiveTextSplitter(opts SplitterOptions) Splitter {
 	if opts.ChunkSize == 0 {
 		opts.ChunkSize = defaultSplitterChunkSize
 	}
-	if opts.ChunkOverlap == 0 {
-		opts.ChunkOverlap = defaultSplitterChunkOverlap
+	if opts.LenFunc == nil {
+		opts.LenFunc = defaultSplitterLenFunc
 	}
 	if len(opts.Separators) == 0 {
 		opts.Separators = defaultSplitterSeparators
@@ -51,11 +53,11 @@ func RecursiveTextSplitter(opts SplitterOptions) Splitter {
 		var finalChunks []string
 		var goodSplits []string
 		for _, split := range splits {
-			if len(split) < opts.ChunkSize {
+			if opts.LenFunc(split) < opts.ChunkSize { // Use LenFunc here
 				goodSplits = append(goodSplits, split)
 			} else {
 				if len(goodSplits) > 0 {
-					mergedText := mergeSplits(goodSplits, separator, opts.ChunkSize, opts.ChunkOverlap)
+					mergedText := mergeSplits(goodSplits, separator, opts.ChunkSize, opts.ChunkOverlap, opts.LenFunc) // Pass LenFunc
 					finalChunks = append(finalChunks, mergedText...)
 					goodSplits = nil
 				}
@@ -68,7 +70,7 @@ func RecursiveTextSplitter(opts SplitterOptions) Splitter {
 		}
 
 		if len(goodSplits) > 0 {
-			mergedText := mergeSplits(goodSplits, separator, opts.ChunkSize, opts.ChunkOverlap)
+			mergedText := mergeSplits(goodSplits, separator, opts.ChunkSize, opts.ChunkOverlap, opts.LenFunc) // Pass LenFunc
 			finalChunks = append(finalChunks, mergedText...)
 		}
 		return finalChunks, nil
@@ -110,13 +112,13 @@ func joinDocs(docs []string, separator string) string {
 	return strings.TrimSpace(strings.Join(docs, separator))
 }
 
-func mergeSplits(splits []string, separator string, chunkSize int, chunkOverlap int) []string {
+func mergeSplits(splits []string, separator string, chunkSize int, chunkOverlap int, lenFunc func(string) int) []string {
 	var docs []string
 	var currentDoc []string
 	total := 0
 
 	for _, d := range splits {
-		length := len(d)
+		length := lenFunc(d) // Use LenFunc here
 		if total+length >= chunkSize {
 			if total > chunkSize {
 				log.Printf("Created a chunk of size %d, which is longer than the specified %d\n", total, chunkSize)
@@ -127,7 +129,7 @@ func mergeSplits(splits []string, separator string, chunkSize int, chunkOverlap 
 					docs = append(docs, doc)
 				}
 				for total > chunkOverlap || (total+length > chunkSize && total > 0) {
-					total -= len(currentDoc[0])
+					total -= lenFunc(currentDoc[0]) // Use LenFunc here
 					currentDoc = currentDoc[1:]
 				}
 			}

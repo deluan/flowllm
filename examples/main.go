@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 )
 
 type example struct {
@@ -19,19 +20,20 @@ func registerExample(name, description string, fn func()) {
 
 func main() {
 	if len(os.Args) == 1 {
-		println("usage: examples <example_name>")
+		println("usage: examples <example_number>")
 		println("available examples:")
-		for _, e := range examples {
-			fmt.Printf("  %s: %s\n", e.name, e.description)
+		for i, e := range examples {
+			fmt.Printf("  %d) %s: %s\n", i, e.name, e.description)
 		}
 		os.Exit(0)
 	}
-	name := os.Args[1]
-	for _, e := range examples {
-		if e.name == name {
-			e.fn()
-			os.Exit(0)
-		}
+	num, err := strconv.Atoi(os.Args[1])
+	if err != nil || num < 0 || num >= len(examples) {
+		println("invalid example number")
+		os.Exit(1)
 	}
-	println("unknown example:", name)
+
+	e := examples[num]
+	e.fn()
+	os.Exit(0)
 }
