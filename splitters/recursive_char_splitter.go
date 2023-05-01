@@ -13,12 +13,10 @@ var (
 )
 
 type Options struct {
-	chunkSize    int
-	chunkOverlap int
-	separators   []string
+	ChunkSize    int
+	ChunkOverlap int
+	Separators   []string
 }
-
-type Option func(*Options)
 
 // RecursiveCharacterText splits a text into chunks of a given size, trying to
 // split at the given separators. If the text is smaller than the chunk size,
@@ -26,19 +24,20 @@ type Option func(*Options)
 // size, it will be split into chunks of the given size, trying to split at the
 // given separators. If the text cannot be split at any of the given separators,
 // it will be split at the last separator.
-func RecursiveCharacterText(opts ...Option) pipelm.Splitter {
-	options := Options{
-		chunkSize:    defaultChunkSize,
-		chunkOverlap: defaultOverlap,
-		separators:   defaultSeparators,
+func RecursiveCharacterText(opts Options) pipelm.Splitter {
+	if opts.ChunkSize == 0 {
+		opts.ChunkSize = defaultChunkSize
 	}
-	for _, opt := range opts {
-		opt(&options)
+	if opts.ChunkOverlap == 0 {
+		opts.ChunkOverlap = defaultOverlap
+	}
+	if len(opts.Separators) == 0 {
+		opts.Separators = defaultSeparators
 	}
 	var splitter pipelm.Splitter
 	splitter = func(text string) ([]string, error) {
 		var separator string
-		for _, s := range options.separators {
+		for _, s := range opts.Separators {
 			if s == "" || strings.Contains(text, s) {
 				separator = s
 				break
@@ -49,11 +48,11 @@ func RecursiveCharacterText(opts ...Option) pipelm.Splitter {
 		var finalChunks []string
 		var goodSplits []string
 		for _, split := range splits {
-			if len(split) < options.chunkSize {
+			if len(split) < opts.ChunkSize {
 				goodSplits = append(goodSplits, split)
 			} else {
 				if len(goodSplits) > 0 {
-					mergedText := mergeSplits(goodSplits, separator, options.chunkSize, options.chunkOverlap)
+					mergedText := mergeSplits(goodSplits, separator, opts.ChunkSize, opts.ChunkOverlap)
 					finalChunks = append(finalChunks, mergedText...)
 					goodSplits = nil
 				}
@@ -66,28 +65,10 @@ func RecursiveCharacterText(opts ...Option) pipelm.Splitter {
 		}
 
 		if len(goodSplits) > 0 {
-			mergedText := mergeSplits(goodSplits, separator, options.chunkSize, options.chunkOverlap)
+			mergedText := mergeSplits(goodSplits, separator, opts.ChunkSize, opts.ChunkOverlap)
 			finalChunks = append(finalChunks, mergedText...)
 		}
 		return finalChunks, nil
 	}
 	return splitter
-}
-
-func WithChunkSize(chunkSize int) Option {
-	return func(o *Options) {
-		o.chunkSize = chunkSize
-	}
-}
-
-func WithChunkOverlap(chunkOverlap int) Option {
-	return func(o *Options) {
-		o.chunkOverlap = chunkOverlap
-	}
-}
-
-func WithSeparators(separators ...string) Option {
-	return func(o *Options) {
-		o.separators = separators
-	}
 }

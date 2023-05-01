@@ -31,10 +31,7 @@ This is even more content.`
 
 	Context("with markdown formatted text", func() {
 		BeforeEach(func() {
-			splitter = splitters.Markdown(
-				splitters.WithChunkSize(40),
-				splitters.WithChunkOverlap(20),
-			)
+			splitter = splitters.Markdown(splitters.Options{ChunkSize: 40, ChunkOverlap: 20})
 			expectedOutput = []string{
 				"# Header 1\n\nThis is some content.",
 				"# Header 2\n\nThis is some more content.",

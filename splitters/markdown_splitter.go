@@ -2,8 +2,8 @@ package splitters
 
 import "github.com/deluan/pipelm"
 
-func Markdown(opts ...Option) pipelm.Splitter {
-	separators := []string{
+func Markdown(opts Options) pipelm.Splitter {
+	opts.Separators = []string{
 		// First, try to split along Markdown headings (starting with level 2)
 		"\n## ",
 		"\n### ",
@@ -26,6 +26,5 @@ func Markdown(opts ...Option) pipelm.Splitter {
 		" ",
 		"",
 	}
-	opts = append([]Option{WithSeparators(separators...)}, opts...)
-	return RecursiveCharacterText(opts...)
+	return RecursiveCharacterText(opts)
 }

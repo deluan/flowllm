@@ -20,7 +20,7 @@ var _ = Describe("RecursiveCharacterText", func() {
 
 	Context("with default options", func() {
 		BeforeEach(func() {
-			splitter = splitters.RecursiveCharacterText()
+			splitter = splitters.RecursiveCharacterText(splitters.Options{})
 			expectedOutput = []string{
 				"This is a sample text for testing the RecursiveCharacterText function.",
 			}
@@ -35,11 +35,11 @@ var _ = Describe("RecursiveCharacterText", func() {
 
 	Context("with custom options", func() {
 		BeforeEach(func() {
-			splitter = splitters.RecursiveCharacterText(
-				splitters.WithChunkSize(20),
-				splitters.WithChunkOverlap(2),
-				splitters.WithSeparators("\n"),
-			)
+			splitter = splitters.RecursiveCharacterText(splitters.Options{
+				ChunkSize:    20,
+				ChunkOverlap: 2,
+				Separators:   []string{"\n"},
+			})
 			expectedOutput = []string{
 				"This is a sample te",
 				"text for testing th",

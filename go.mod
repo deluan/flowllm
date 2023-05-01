@@ -3,9 +3,11 @@ module github.com/deluan/pipelm
 go 1.20
 
 require (
+	github.com/google/uuid v1.3.0
 	github.com/onsi/ginkgo/v2 v2.9.2
 	github.com/onsi/gomega v1.27.6
 	github.com/sashabaranov/go-openai v1.9.0
+	go.etcd.io/bbolt v1.3.7
 	golang.org/x/exp v0.0.0-20230425010034-47ecfdc1ba53
 )
 

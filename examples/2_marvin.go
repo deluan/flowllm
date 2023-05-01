@@ -29,6 +29,7 @@ func marvin() {
 			ChatLLM(openai.NewChatModel(openai.Options{Model: "gpt-3.5-turbo", Temperature: 0.8})),
 		),
 	)
+
 	input := "Introduce yourself."
 	reader := bufio.NewReader(os.Stdin)
 	for {

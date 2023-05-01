@@ -13,7 +13,7 @@ const (
 	defaultMaxTokens = 256
 )
 
-// Options for OpenAI models
+// Options for OpenAI Completions models
 type Options struct {
 	ApiKey           string
 	Model            string
@@ -26,7 +26,7 @@ type Options struct {
 	Stop             []string
 }
 
-// CompletionModel is a LLM implementation that uses the CompletionModel API to generate text.
+// CompletionModel is a LLM implementation that uses the Completions API to generate text.
 type CompletionModel struct {
 	client *openai.Client
 	opts   Options

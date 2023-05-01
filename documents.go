@@ -1,6 +1,10 @@
 package pipelm
 
-import "context"
+import (
+	"context"
+	"errors"
+	"io"
+)
 
 // VectorStore is a particular type of database optimized for storing documents and their embeddings,
 // and then fetching of the most relevant documents for a particular query, i.e. those whose embeddings
@@ -35,4 +39,23 @@ type DocumentLoaderFunc func(ctx context.Context) (Document, error)
 
 func (f DocumentLoaderFunc) LoadNext(ctx context.Context) (Document, error) {
 	return f(ctx)
+}
+
+func LoadDocs(n int, loader DocumentLoader) ([]Document, error) {
+	ctx := context.Background()
+	var docs []Document
+	for {
+		doc, err := loader.LoadNext(ctx)
+		if errors.Is(err, io.EOF) {
+			return docs, nil
+		}
+		if err != nil {
+			return nil, err
+		}
+		docs = append(docs, doc)
+		n--
+		if n == 0 {
+			return docs, nil
+		}
+	}
 }

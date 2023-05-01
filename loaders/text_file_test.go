@@ -37,7 +37,7 @@ var _ = Describe("TextFile", func() {
 
 	Context("with a splitter", func() {
 		BeforeEach(func() {
-			loader = loaders.TextFile("../testdata/state_of_the_union.txt", splitters.RecursiveCharacterText())
+			loader = loaders.TextFile("../testdata/state_of_the_union.txt", splitters.RecursiveCharacterText(splitters.Options{}))
 		})
 		It("loads a text file into multiple Documents", func() {
 			doc, err := loader.LoadNext(ctx)
