@@ -13,6 +13,8 @@ func init() {
 }
 
 func multiStage() {
+	// Build a chain that will generate a company name and slogan, and then use them to generate a sentence.
+	// Calls to the OpenAI API are made in parallel, and the results are merged into a single result.
 	chain := Chain(
 		ParallelChain(
 			2,
@@ -29,11 +31,13 @@ func multiStage() {
 				MapOutputTo("slogan"),
 			),
 		),
+		// You can modify the LLMs outputs using some string transformation handlers
 		TrimSpace("name", "slogan"),
 		TrimSuffix(".", "name"),
 		Template("The company {name} makes {product} and their slogan is {slogan}."),
 	)
 
+	// Run the chain
 	res, err := chain(context.Background(), Values{"product": "colorful sockets"})
 	fmt.Println(res, err)
 }

@@ -13,12 +13,17 @@ func init() {
 }
 
 func simple() {
+	// Build a simple chain that will generate a joke about a given topic
 	chain := Chain(
-		//Template("Tell me a joke about {topic}?"),
 		ChatTemplate{UserMessage("Tell me a joke about {topic}?")},
 		ChatLLM(openai.NewChatModel(openai.Options{})),
 	)
 
+	// Run the chain for topic "AI"
 	res, err := chain(context.Background(), Values{"topic": "AI"})
+	fmt.Println(res, err)
+
+	// Run the chain for topic "GoLang"
+	res, err = chain(context.Background(), Values{"topic": "GoLang"})
 	fmt.Println(res, err)
 }

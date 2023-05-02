@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-// Template can be used to format a string with variables. Useful to create prompts.
+// Template can be used to format a string with variables. Useful for creating prompts.
 // It uses a simple template syntax, where variables are enclosed in curly braces.
 type Template string
 
