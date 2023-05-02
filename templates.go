@@ -35,7 +35,7 @@ const chatHistoryPlaceholderRole = "_messages_placeholder"
 // It will format a list of messages, each with a role and a prompt.
 type ChatTemplate []MessageTemplate
 
-func (t ChatTemplate) Call(ctx context.Context, values ...Values) (Values, error) {
+func (t ChatTemplate) Call(_ context.Context, values ...Values) (Values, error) {
 	vals := Values{}.Merge(values...)
 
 	var output strings.Builder

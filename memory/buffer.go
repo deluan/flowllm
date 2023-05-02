@@ -6,8 +6,6 @@ import (
 	"github.com/deluan/flowllm"
 )
 
-const ()
-
 type Buffer struct {
 	chatHistory *ChatMessageHistory
 	windowSize  int

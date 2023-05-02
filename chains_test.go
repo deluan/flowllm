@@ -226,14 +226,14 @@ type fakeMemory struct {
 	LoadErr      error
 }
 
-func (m *fakeMemory) Load(ctx context.Context) (ChatMessages, error) {
+func (m *fakeMemory) Load(context.Context) (ChatMessages, error) {
 	if m.LoadErr != nil {
 		return nil, m.LoadErr
 	}
 	return m.ChatMessages, nil
 }
 
-func (m *fakeMemory) Save(ctx context.Context, input, output string) error {
+func (m *fakeMemory) Save(_ context.Context, input, output string) error {
 	if m.SaveErr != nil {
 		return m.SaveErr
 	}
