@@ -1,4 +1,4 @@
-module github.com/deluan/pipelm
+module github.com/deluan/flowllm
 
 go 1.20
 

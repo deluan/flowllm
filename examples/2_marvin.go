@@ -7,9 +7,9 @@ import (
 	"os"
 	"strings"
 
-	. "github.com/deluan/pipelm"
-	"github.com/deluan/pipelm/llms/openai"
-	"github.com/deluan/pipelm/memory"
+	. "github.com/deluan/flowllm"
+	"github.com/deluan/flowllm/llms/openai"
+	"github.com/deluan/flowllm/memory"
 )
 
 func init() {

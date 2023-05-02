@@ -3,7 +3,7 @@ package openai
 import (
 	"context"
 
-	"github.com/deluan/pipelm"
+	"github.com/deluan/flowllm"
 	"github.com/sashabaranov/go-openai"
 )
 
@@ -25,7 +25,7 @@ func NewChatModel(opts Options) *ChatModel {
 }
 
 func (m *ChatModel) Call(ctx context.Context, input string) (string, error) {
-	req := m.makeRequest([]pipelm.ChatMessage{{Role: "user", Content: input}})
+	req := m.makeRequest([]flowllm.ChatMessage{{Role: "user", Content: input}})
 	resp, err := m.client.CreateChatCompletion(ctx, req)
 	if err != nil {
 		return "", err
@@ -33,7 +33,7 @@ func (m *ChatModel) Call(ctx context.Context, input string) (string, error) {
 	return resp.Choices[0].Message.Content, nil
 }
 
-func (m *ChatModel) Chat(ctx context.Context, msgs []pipelm.ChatMessage) (string, error) {
+func (m *ChatModel) Chat(ctx context.Context, msgs []flowllm.ChatMessage) (string, error) {
 	req := m.makeRequest(msgs)
 	resp, err := m.client.CreateChatCompletion(ctx, req)
 	if err != nil {
@@ -42,7 +42,7 @@ func (m *ChatModel) Chat(ctx context.Context, msgs []pipelm.ChatMessage) (string
 	return resp.Choices[0].Message.Content, nil
 }
 
-func (m *ChatModel) makeRequest(msgs []pipelm.ChatMessage) openai.ChatCompletionRequest {
+func (m *ChatModel) makeRequest(msgs []flowllm.ChatMessage) openai.ChatCompletionRequest {
 	var res []openai.ChatCompletionMessage
 	for _, m := range msgs {
 		res = append(res, openai.ChatCompletionMessage{

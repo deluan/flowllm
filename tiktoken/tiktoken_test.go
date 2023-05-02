@@ -4,8 +4,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/deluan/pipelm"
-	. "github.com/deluan/pipelm/tiktoken"
+	"github.com/deluan/flowllm"
+	. "github.com/deluan/flowllm/tiktoken"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -25,7 +25,7 @@ var _ = Describe("Tokenizer", func() {
 
 	Describe("Splitter", func() {
 		It("splits using tiktoken token sizes", func() {
-			splitter := Splitter("gpt-3.5-turbo", pipelm.SplitterOptions{
+			splitter := Splitter("gpt-3.5-turbo", flowllm.SplitterOptions{
 				ChunkSize: 100,
 			})
 

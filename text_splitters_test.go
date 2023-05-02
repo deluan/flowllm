@@ -1,7 +1,7 @@
-package pipelm_test
+package flowllm_test
 
 import (
-	. "github.com/deluan/pipelm"
+	. "github.com/deluan/flowllm"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )

@@ -3,7 +3,7 @@ package vectorstores
 import (
 	"context"
 
-	"github.com/deluan/pipelm"
+	"github.com/deluan/flowllm"
 	"golang.org/x/exp/slices"
 )
 
@@ -11,7 +11,7 @@ import (
 // stores the vectors in memory. It is not meant to be used in production, but it is useful
 // for testing and as an example of how to implement a VectorStore.
 type Memory struct {
-	embeddings pipelm.Embeddings
+	embeddings flowllm.Embeddings
 	data       []memoryItem
 }
 
@@ -22,13 +22,13 @@ type memoryItem struct {
 }
 
 // NewMemoryVectorStore creates a new Memory vector store.
-func NewMemoryVectorStore(embeddings pipelm.Embeddings) *Memory {
+func NewMemoryVectorStore(embeddings flowllm.Embeddings) *Memory {
 	return &Memory{
 		embeddings: embeddings,
 	}
 }
 
-func (m *Memory) AddDocuments(ctx context.Context, documents ...pipelm.Document) error {
+func (m *Memory) AddDocuments(ctx context.Context, documents ...flowllm.Document) error {
 	texts := make([]string, len(documents))
 	for i, document := range documents {
 		texts[i] = document.PageContent
@@ -41,23 +41,23 @@ func (m *Memory) AddDocuments(ctx context.Context, documents ...pipelm.Document)
 	return nil
 }
 
-func (m *Memory) SimilaritySearch(ctx context.Context, query string, k int) ([]pipelm.Document, error) {
+func (m *Memory) SimilaritySearch(ctx context.Context, query string, k int) ([]flowllm.Document, error) {
 	return SimilaritySearch(ctx, m, m.embeddings, query, k)
 }
 
-func (m *Memory) SimilaritySearchVectorWithScore(_ context.Context, query []float32, k int) ([]pipelm.ScoredDocument, error) {
-	var results []pipelm.ScoredDocument
+func (m *Memory) SimilaritySearchVectorWithScore(_ context.Context, query []float32, k int) ([]flowllm.ScoredDocument, error) {
+	var results []flowllm.ScoredDocument
 	for _, item := range m.data {
 		similarity := CosineSimilarity(query, item.vector)
-		results = append(results, pipelm.ScoredDocument{
-			Document: pipelm.Document{
+		results = append(results, flowllm.ScoredDocument{
+			Document: flowllm.Document{
 				PageContent: item.content,
 				Metadata:    item.metadata,
 			},
 			Score: similarity,
 		})
 	}
-	slices.SortFunc(results, func(a, b pipelm.ScoredDocument) bool {
+	slices.SortFunc(results, func(a, b flowllm.ScoredDocument) bool {
 		return a.Score > b.Score
 	})
 	k = min(k, len(results))
@@ -71,7 +71,7 @@ func min(a, b int) int {
 	return b
 }
 
-func (m *Memory) addVectors(vectors [][]float32, documents []pipelm.Document) {
+func (m *Memory) addVectors(vectors [][]float32, documents []flowllm.Document) {
 	var memoryVectors []memoryItem
 	for i, vector := range vectors {
 		memoryVectors = append(memoryVectors, memoryItem{

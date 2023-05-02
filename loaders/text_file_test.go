@@ -4,8 +4,8 @@ import (
 	"context"
 	"io"
 
-	"github.com/deluan/pipelm"
-	"github.com/deluan/pipelm/loaders"
+	"github.com/deluan/flowllm"
+	"github.com/deluan/flowllm/loaders"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -13,7 +13,7 @@ import (
 var _ = Describe("TextFile", func() {
 	var (
 		ctx    context.Context
-		loader pipelm.DocumentLoader
+		loader flowllm.DocumentLoader
 	)
 
 	BeforeEach(func() {
@@ -35,7 +35,7 @@ var _ = Describe("TextFile", func() {
 
 	Context("with a splitter", func() {
 		BeforeEach(func() {
-			loader = loaders.TextFile("../testdata/small_text.txt", pipelm.RecursiveTextSplitter(pipelm.SplitterOptions{ChunkSize: 10}))
+			loader = loaders.TextFile("../testdata/small_text.txt", flowllm.RecursiveTextSplitter(flowllm.SplitterOptions{ChunkSize: 10}))
 		})
 		It("loads the text file one chunk at a time", func() {
 			doc, err := loader.LoadNext(ctx)
@@ -51,7 +51,7 @@ var _ = Describe("TextFile", func() {
 		})
 
 		It("loads all documents", func() {
-			docs, err := pipelm.LoadDocs(10000, loader)
+			docs, err := flowllm.LoadDocs(10000, loader)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(docs).To(HaveLen(2))
 			Expect(docs[0].PageContent).To(Equal("This is a"))

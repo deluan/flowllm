@@ -4,7 +4,7 @@ import (
 	"context"
 	"math"
 
-	"github.com/deluan/pipelm"
+	"github.com/deluan/flowllm"
 )
 
 // CosineSimilarity calculates the cosine similarity between two vectors.
@@ -23,12 +23,12 @@ func CosineSimilarity(a, b []float32) float32 {
 
 // SimilaritySearch returns the k most similar documents to the given query. It uses the given
 // vector store's SimilaritySearchVectorWithScore method to perform the search.
-func SimilaritySearch(ctx context.Context, store pipelm.VectorStore, embeddings pipelm.Embeddings, query string, k int) ([]pipelm.Document, error) {
+func SimilaritySearch(ctx context.Context, store flowllm.VectorStore, embeddings flowllm.Embeddings, query string, k int) ([]flowllm.Document, error) {
 	queryVector, err := embeddings.EmbedString(ctx, query)
 	if err != nil {
 		return nil, err
 	}
-	var docs []pipelm.Document
+	var docs []flowllm.Document
 	results, _ := store.SimilaritySearchVectorWithScore(ctx, queryVector, k)
 	for _, result := range results {
 		docs = append(docs, result.Document)

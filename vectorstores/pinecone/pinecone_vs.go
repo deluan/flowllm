@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/deluan/pipelm"
-	"github.com/deluan/pipelm/vectorstores"
+	"github.com/deluan/flowllm"
+	"github.com/deluan/flowllm/vectorstores"
 	"golang.org/x/exp/slices"
 )
 
@@ -27,12 +27,12 @@ type Options struct {
 // with the same dimensionality as the embeddings used to create the store.
 type VectorStore struct {
 	client     *client
-	embeddings pipelm.Embeddings
+	embeddings flowllm.Embeddings
 	textKey    string
 }
 
 // NewVectorStore creates a new Pinecone vector store.
-func NewVectorStore(ctx context.Context, embeddings pipelm.Embeddings, opts Options) (*VectorStore, error) {
+func NewVectorStore(ctx context.Context, embeddings flowllm.Embeddings, opts Options) (*VectorStore, error) {
 	if opts.ApiKey == "" {
 		opts.ApiKey = os.Getenv("PINECONE_API_KEY")
 	}
@@ -76,7 +76,7 @@ func NewVectorStore(ctx context.Context, embeddings pipelm.Embeddings, opts Opti
 	return &s, nil
 }
 
-func (s *VectorStore) AddDocuments(ctx context.Context, documents ...pipelm.Document) error {
+func (s *VectorStore) AddDocuments(ctx context.Context, documents ...flowllm.Document) error {
 	var texts []string
 	for i := 0; i < len(documents); i++ {
 		texts = append(texts, documents[i].PageContent)
@@ -106,17 +106,17 @@ func (s *VectorStore) AddDocuments(ctx context.Context, documents ...pipelm.Docu
 	return s.client.upsert(ctx, items)
 }
 
-func (s *VectorStore) SimilaritySearch(ctx context.Context, query string, k int) ([]pipelm.Document, error) {
+func (s *VectorStore) SimilaritySearch(ctx context.Context, query string, k int) ([]flowllm.Document, error) {
 	return vectorstores.SimilaritySearch(ctx, s, s.embeddings, query, k)
 }
 
-func (s *VectorStore) SimilaritySearchVectorWithScore(ctx context.Context, query []float32, k int) ([]pipelm.ScoredDocument, error) {
+func (s *VectorStore) SimilaritySearchVectorWithScore(ctx context.Context, query []float32, k int) ([]flowllm.ScoredDocument, error) {
 	queryResponse, err := s.client.query(ctx, query, k)
 	if err != nil {
 		return nil, err
 	}
 
-	var resultDocuments []pipelm.ScoredDocument
+	var resultDocuments []flowllm.ScoredDocument
 	for _, match := range queryResponse.Matches {
 		pageContent, ok := match.Metadata[s.textKey]
 		if !ok {
@@ -131,15 +131,15 @@ func (s *VectorStore) SimilaritySearchVectorWithScore(ctx context.Context, query
 			metadata[key] = value
 		}
 
-		resultDocuments = append(resultDocuments, pipelm.ScoredDocument{
-			Document: pipelm.Document{
+		resultDocuments = append(resultDocuments, flowllm.ScoredDocument{
+			Document: flowllm.Document{
 				PageContent: pageContent,
 				Metadata:    metadata,
 			},
 			Score: match.Score,
 		})
 	}
-	slices.SortFunc(resultDocuments, func(a, b pipelm.ScoredDocument) bool {
+	slices.SortFunc(resultDocuments, func(a, b flowllm.ScoredDocument) bool {
 		return a.Score > b.Score
 	})
 

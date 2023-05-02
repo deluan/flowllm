@@ -8,8 +8,8 @@ import (
 	"io/fs"
 	"time"
 
-	"github.com/deluan/pipelm"
-	"github.com/deluan/pipelm/vectorstores"
+	"github.com/deluan/flowllm"
+	"github.com/deluan/flowllm/vectorstores"
 	"go.etcd.io/bbolt"
 	"golang.org/x/exp/slices"
 )
@@ -28,16 +28,16 @@ type Options struct {
 	Timeout    time.Duration
 }
 
-// VectorStore is a vector store backed by BoltDB. It implements the pipelm.VectorStore interface,
+// VectorStore is a vector store backed by BoltDB. It implements the flowllm.VectorStore interface,
 // and it is ideal for small to medium-sized collections of vectors.
 type VectorStore struct {
-	embeddings pipelm.Embeddings
+	embeddings flowllm.Embeddings
 	db         *bbolt.DB
 	bucket     string
 }
 
 // NewVectorStore creates a new Bolt vector store.
-func NewVectorStore(embeddings pipelm.Embeddings, opts Options) (*VectorStore, func(), error) {
+func NewVectorStore(embeddings flowllm.Embeddings, opts Options) (*VectorStore, func(), error) {
 	if opts.Path == "" {
 		opts.Path = DefaultPath
 	}
@@ -87,7 +87,7 @@ func (d boltItem) Marshall() []byte {
 	return buf
 }
 
-func (s *VectorStore) AddDocuments(ctx context.Context, documents ...pipelm.Document) error {
+func (s *VectorStore) AddDocuments(ctx context.Context, documents ...flowllm.Document) error {
 	texts := make([]string, len(documents))
 	for i, document := range documents {
 		texts[i] = document.PageContent
@@ -118,11 +118,11 @@ type match struct {
 	similarity float32
 }
 
-func (s *VectorStore) SimilaritySearch(ctx context.Context, query string, k int) ([]pipelm.Document, error) {
+func (s *VectorStore) SimilaritySearch(ctx context.Context, query string, k int) ([]flowllm.Document, error) {
 	return vectorstores.SimilaritySearch(ctx, s, s.embeddings, query, k)
 }
 
-func (s *VectorStore) SimilaritySearchVectorWithScore(_ context.Context, query []float32, k int) ([]pipelm.ScoredDocument, error) {
+func (s *VectorStore) SimilaritySearchVectorWithScore(_ context.Context, query []float32, k int) ([]flowllm.ScoredDocument, error) {
 	var matches []match
 	err := s.db.View(func(tx *bbolt.Tx) error {
 		bucket := tx.Bucket([]byte(s.bucket))
@@ -145,7 +145,7 @@ func (s *VectorStore) SimilaritySearchVectorWithScore(_ context.Context, query [
 	})
 	k = min(k, len(matches))
 	matches = matches[:k]
-	var results []pipelm.ScoredDocument
+	var results []flowllm.ScoredDocument
 	err = s.db.View(func(tx *bbolt.Tx) error {
 		bucket := tx.Bucket([]byte(s.bucket))
 		for _, match := range matches {
@@ -154,9 +154,9 @@ func (s *VectorStore) SimilaritySearchVectorWithScore(_ context.Context, query [
 			if err != nil {
 				return err
 			}
-			results = append(results, pipelm.ScoredDocument{
+			results = append(results, flowllm.ScoredDocument{
 				Score: match.similarity,
-				Document: pipelm.Document{
+				Document: flowllm.Document{
 					PageContent: item.Content,
 					Metadata:    item.Metadata,
 				},

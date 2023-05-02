@@ -5,40 +5,40 @@ import (
 	"io"
 	"os"
 
-	"github.com/deluan/pipelm"
+	"github.com/deluan/flowllm"
 )
 
-func TextFile(path string, splitter ...pipelm.Splitter) pipelm.DocumentLoaderFunc {
-	var docs []pipelm.Document
+func TextFile(path string, splitter ...flowllm.Splitter) flowllm.DocumentLoaderFunc {
+	var docs []flowllm.Document
 	var idx int
-	var spl pipelm.Splitter
+	var spl flowllm.Splitter
 	if len(splitter) > 0 {
 		spl = splitter[0]
 	}
 
-	return func(context.Context) (pipelm.Document, error) {
+	return func(context.Context) (flowllm.Document, error) {
 		// Return next document if already loaded
 		if len(docs) > 0 {
 			if idx < len(docs) {
 				idx++
 				return docs[idx-1], nil
 			}
-			return pipelm.Document{}, io.EOF
+			return flowllm.Document{}, io.EOF
 		}
 
 		// Load file
 		text, err := os.ReadFile(path)
 		if err != nil {
-			return pipelm.Document{}, err
+			return flowllm.Document{}, err
 		}
 		metadata := map[string]any{"source": path}
-		docs = []pipelm.Document{{PageContent: string(text), Metadata: metadata}}
+		docs = []flowllm.Document{{PageContent: string(text), Metadata: metadata}}
 
 		// Use splitter if provided
 		if spl != nil {
 			docs, err = SplitDocuments(splitter[0], docs)
 			if err != nil {
-				return pipelm.Document{}, err
+				return flowllm.Document{}, err
 			}
 		}
 

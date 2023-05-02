@@ -1,8 +1,8 @@
 package loaders
 
-import "github.com/deluan/pipelm"
+import "github.com/deluan/flowllm"
 
-func SplitDocuments(splitter pipelm.Splitter, documents []pipelm.Document) ([]pipelm.Document, error) {
+func SplitDocuments(splitter flowllm.Splitter, documents []flowllm.Document) ([]flowllm.Document, error) {
 	var texts []string
 	var metadatas []map[string]any
 	for _, document := range documents {
@@ -13,7 +13,7 @@ func SplitDocuments(splitter pipelm.Splitter, documents []pipelm.Document) ([]pi
 	return createDocuments(splitter, texts, metadatas)
 }
 
-func createDocuments(splitter pipelm.Splitter, texts []string, metadatas []map[string]any) ([]pipelm.Document, error) {
+func createDocuments(splitter flowllm.Splitter, texts []string, metadatas []map[string]any) ([]flowllm.Document, error) {
 	if len(metadatas) == 0 {
 		metadatas = make([]map[string]any, len(texts))
 		for i := range metadatas {
@@ -21,7 +21,7 @@ func createDocuments(splitter pipelm.Splitter, texts []string, metadatas []map[s
 		}
 	}
 
-	var documents []pipelm.Document
+	var documents []flowllm.Document
 	for i, text := range texts {
 		chunks, err := splitter(text)
 		if err != nil {
@@ -32,7 +32,7 @@ func createDocuments(splitter pipelm.Splitter, texts []string, metadatas []map[s
 			for k, v := range metadatas[i] {
 				metadata[k] = v
 			}
-			documents = append(documents, pipelm.Document{
+			documents = append(documents, flowllm.Document{
 				PageContent: chunk,
 				Metadata:    metadata,
 			})

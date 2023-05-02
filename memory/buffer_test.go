@@ -4,8 +4,8 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/deluan/pipelm"
-	"github.com/deluan/pipelm/memory"
+	"github.com/deluan/flowllm"
+	"github.com/deluan/flowllm/memory"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -28,12 +28,12 @@ var _ = Describe("Buffer", func() {
 		messages, err := buf.Load(ctx)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(messages).To(HaveLen(2))
-		Expect(messages[0]).To(Equal(pipelm.ChatMessage{Content: "User input message", Role: "user"}))
-		Expect(messages[1]).To(Equal(pipelm.ChatMessage{Content: "Assistant output message", Role: "assistant"}))
+		Expect(messages[0]).To(Equal(flowllm.ChatMessage{Content: "User input message", Role: "user"}))
+		Expect(messages[1]).To(Equal(flowllm.ChatMessage{Content: "Assistant output message", Role: "assistant"}))
 	})
 
 	It("initializes chat history with ChatMessages", func() {
-		msgs := pipelm.ChatMessages{
+		msgs := flowllm.ChatMessages{
 			{Content: "User input message 0", Role: "user"},
 			{Content: "Assistant output message 0", Role: "assistant"},
 		}
@@ -44,10 +44,10 @@ var _ = Describe("Buffer", func() {
 		messages, err := buf.Load(ctx)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(messages).To(HaveLen(4))
-		Expect(messages[0]).To(Equal(pipelm.ChatMessage{Content: "User input message 0", Role: "user"}))
-		Expect(messages[1]).To(Equal(pipelm.ChatMessage{Content: "Assistant output message 0", Role: "assistant"}))
-		Expect(messages[2]).To(Equal(pipelm.ChatMessage{Content: "User input message 1", Role: "user"}))
-		Expect(messages[3]).To(Equal(pipelm.ChatMessage{Content: "Assistant output message 1", Role: "assistant"}))
+		Expect(messages[0]).To(Equal(flowllm.ChatMessage{Content: "User input message 0", Role: "user"}))
+		Expect(messages[1]).To(Equal(flowllm.ChatMessage{Content: "Assistant output message 0", Role: "assistant"}))
+		Expect(messages[2]).To(Equal(flowllm.ChatMessage{Content: "User input message 1", Role: "user"}))
+		Expect(messages[3]).To(Equal(flowllm.ChatMessage{Content: "Assistant output message 1", Role: "assistant"}))
 	})
 
 	It("truncates history with windowSize", func() {

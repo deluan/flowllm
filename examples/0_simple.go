@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	. "github.com/deluan/pipelm"
-	"github.com/deluan/pipelm/llms/openai"
+	. "github.com/deluan/flowllm"
+	"github.com/deluan/flowllm/llms/openai"
 )
 
 func init() {

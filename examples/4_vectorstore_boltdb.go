@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/deluan/pipelm"
-	"github.com/deluan/pipelm/llms/openai"
-	"github.com/deluan/pipelm/loaders"
-	"github.com/deluan/pipelm/vectorstores/bolt"
+	"github.com/deluan/flowllm"
+	"github.com/deluan/flowllm/llms/openai"
+	"github.com/deluan/flowllm/loaders"
+	"github.com/deluan/flowllm/vectorstores/bolt"
 )
 
 func init() {
@@ -20,7 +20,7 @@ func vectorStoreBoltDB() {
 	//Create docs with a loader
 	loader := loaders.TextFile(
 		"testdata/state_of_the_union.txt",
-		pipelm.RecursiveTextSplitter(pipelm.SplitterOptions{ChunkSize: 100, ChunkOverlap: 10}),
+		flowllm.RecursiveTextSplitter(flowllm.SplitterOptions{ChunkSize: 100, ChunkOverlap: 10}),
 	)
 
 	// Create a vector store
@@ -36,7 +36,7 @@ func vectorStoreBoltDB() {
 	defer closeDB()
 
 	// Load the first 30 documents
-	docs, err := pipelm.LoadDocs(30, loader)
+	docs, err := flowllm.LoadDocs(30, loader)
 	if err != nil {
 		panic(err)
 	}

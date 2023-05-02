@@ -1,7 +1,7 @@
 package vectorstores_test
 
 import (
-	. "github.com/deluan/pipelm/vectorstores"
+	. "github.com/deluan/flowllm/vectorstores"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )

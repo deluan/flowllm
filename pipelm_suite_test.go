@@ -1,4 +1,4 @@
-package pipelm_test
+package flowllm_test
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestPipeLM(t *testing.T) {
+func TestFlowLLM(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "PipeLM Tests Suite")
+	RunSpecs(t, "FlowLLM Tests Suite")
 }

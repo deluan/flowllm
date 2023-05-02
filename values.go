@@ -1,4 +1,4 @@
-package pipelm
+package flowllm
 
 import (
 	"encoding/json"

@@ -1,11 +1,11 @@
-package pipelm
+package flowllm
 
 import (
 	"context"
 	"fmt"
 	"strings"
 
-	"github.com/deluan/pipelm/pl"
+	"github.com/deluan/flowllm/pl"
 )
 
 // Handler is the interface implemented by all composable modules in the library.

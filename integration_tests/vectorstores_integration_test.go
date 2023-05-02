@@ -5,10 +5,10 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/deluan/pipelm"
-	"github.com/deluan/pipelm/vectorstores"
-	"github.com/deluan/pipelm/vectorstores/bolt"
-	"github.com/deluan/pipelm/vectorstores/pinecone"
+	"github.com/deluan/flowllm"
+	"github.com/deluan/flowllm/vectorstores"
+	"github.com/deluan/flowllm/vectorstores/bolt"
+	"github.com/deluan/flowllm/vectorstores/pinecone"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -16,9 +16,9 @@ import (
 
 var _ = Describe("Vector Stores Integration Tests", func() {
 	var (
-		boltVS         pipelm.VectorStore
-		memoryVS       pipelm.VectorStore
-		pineconeVS     pipelm.VectorStore
+		boltVS         flowllm.VectorStore
+		memoryVS       flowllm.VectorStore
+		pineconeVS     flowllm.VectorStore
 		ctx            context.Context
 		mockEmbeddings *FakeEmbeddings
 	)
@@ -32,7 +32,7 @@ var _ = Describe("Vector Stores Integration Tests", func() {
 		memoryVS = vectorstores.NewMemoryVectorStore(mockEmbeddings)
 
 		// Create a BoltDB VectorStore
-		boltTmpDB, err := os.CreateTemp("", "pipelm_bolt_*_.db")
+		boltTmpDB, err := os.CreateTemp("", "flowllm_bolt_*_.db")
 		Expect(err).ToNot(HaveOccurred())
 		_ = boltTmpDB.Close()
 		var closeDB func()
@@ -46,7 +46,7 @@ var _ = Describe("Vector Stores Integration Tests", func() {
 			pineconeVS, err = pinecone.NewVectorStore(ctx, mockEmbeddings,
 				pinecone.Options{
 					Index:     os.Getenv("PINECONE_INDEX_INTEGRATION_TEST"),
-					NameSpace: "pipelm-integration-tests-" + uuid.NewString(),
+					NameSpace: "flowllm-integration-tests-" + uuid.NewString(),
 				},
 			)
 			Expect(err).ToNot(HaveOccurred())
@@ -54,12 +54,12 @@ var _ = Describe("Vector Stores Integration Tests", func() {
 	})
 
 	DescribeTable("It should perform a similarity search using the query string and return correct results",
-		func(getStore func() pipelm.VectorStore) {
+		func(getStore func() flowllm.VectorStore) {
 			store := getStore()
 			if store == nil {
 				Skip("Skipping test. No VectorStore found.")
 			}
-			documents := []pipelm.Document{
+			documents := []flowllm.Document{
 				{
 					PageContent: "first document",
 					Metadata:    map[string]any{"key1": "value1"},
@@ -82,18 +82,18 @@ var _ = Describe("Vector Stores Integration Tests", func() {
 			Expect(similarDocs[1].PageContent).To(Equal(documents[0].PageContent))
 			Expect(similarDocs[1].Metadata).To(Equal(documents[0].Metadata))
 		},
-		Entry("Memory", func() pipelm.VectorStore { return memoryVS }),
-		Entry("Bolt", func() pipelm.VectorStore { return boltVS }),
-		Entry("Pinecone", func() pipelm.VectorStore { return pineconeVS }),
+		Entry("Memory", func() flowllm.VectorStore { return memoryVS }),
+		Entry("Bolt", func() flowllm.VectorStore { return boltVS }),
+		Entry("Pinecone", func() flowllm.VectorStore { return pineconeVS }),
 	)
 
 	DescribeTable("It should perform a similarity search using the query vector and return correct results with scores",
-		func(getStore func() pipelm.VectorStore) {
+		func(getStore func() flowllm.VectorStore) {
 			store := getStore()
 			if store == nil {
 				Skip("Skipping test. No VectorStore found.")
 			}
-			documents := []pipelm.Document{
+			documents := []flowllm.Document{
 				{PageContent: "first document"},
 				{PageContent: "second document"},
 			}
@@ -109,18 +109,18 @@ var _ = Describe("Vector Stores Integration Tests", func() {
 			Expect(scoredDocs[1].Document.PageContent).To(Equal(documents[1].PageContent))
 			Expect(scoredDocs[0].Score).To(BeNumerically(">", scoredDocs[1].Score))
 		},
-		Entry("Memory", func() pipelm.VectorStore { return memoryVS }),
-		Entry("Bolt", func() pipelm.VectorStore { return boltVS }),
-		Entry("Pinecone", func() pipelm.VectorStore { return pineconeVS }),
+		Entry("Memory", func() flowllm.VectorStore { return memoryVS }),
+		Entry("Bolt", func() flowllm.VectorStore { return boltVS }),
+		Entry("Pinecone", func() flowllm.VectorStore { return pineconeVS }),
 	)
 
 	DescribeTable("It should return all documents when k is greater than the number of documents in the vector store",
-		func(getStore func() pipelm.VectorStore) {
+		func(getStore func() flowllm.VectorStore) {
 			store := getStore()
 			if store == nil {
 				Skip("Skipping test. No VectorStore found.")
 			}
-			documents := []pipelm.Document{
+			documents := []flowllm.Document{
 				{PageContent: "first document"},
 				{PageContent: "second document"},
 			}
@@ -135,13 +135,13 @@ var _ = Describe("Vector Stores Integration Tests", func() {
 			Expect(similarDocs[0].PageContent).To(Equal(documents[0].PageContent))
 			Expect(similarDocs[1].PageContent).To(Equal(documents[1].PageContent))
 		},
-		Entry("Memory", func() pipelm.VectorStore { return memoryVS }),
-		Entry("Bolt", func() pipelm.VectorStore { return boltVS }),
-		Entry("Pinecone", func() pipelm.VectorStore { return pineconeVS }),
+		Entry("Memory", func() flowllm.VectorStore { return memoryVS }),
+		Entry("Bolt", func() flowllm.VectorStore { return boltVS }),
+		Entry("Pinecone", func() flowllm.VectorStore { return pineconeVS }),
 	)
 
 	DescribeTable("It should return an empty result when performing a similarity search on an empty vector store",
-		func(getStore func() pipelm.VectorStore) {
+		func(getStore func() flowllm.VectorStore) {
 			store := getStore()
 			if store == nil {
 				Skip("Skipping test. No VectorStore found.")
@@ -153,9 +153,9 @@ var _ = Describe("Vector Stores Integration Tests", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(similarDocs).To(BeEmpty())
 		},
-		Entry("Memory", func() pipelm.VectorStore { return memoryVS }),
-		Entry("Bolt", func() pipelm.VectorStore { return boltVS }),
-		Entry("Pinecone", func() pipelm.VectorStore { return pineconeVS }),
+		Entry("Memory", func() flowllm.VectorStore { return memoryVS }),
+		Entry("Bolt", func() flowllm.VectorStore { return boltVS }),
+		Entry("Pinecone", func() flowllm.VectorStore { return pineconeVS }),
 	)
 })
 

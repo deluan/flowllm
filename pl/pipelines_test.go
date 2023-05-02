@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/deluan/pipelm/pl"
+	"github.com/deluan/flowllm/pl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )

@@ -3,7 +3,7 @@ package memory
 import (
 	"context"
 
-	"github.com/deluan/pipelm"
+	"github.com/deluan/flowllm"
 )
 
 const ()
@@ -13,7 +13,7 @@ type Buffer struct {
 	windowSize  int
 }
 
-func NewBuffer(windowSize int, history *pipelm.ChatMessages) *Buffer {
+func NewBuffer(windowSize int, history *flowllm.ChatMessages) *Buffer {
 	chatHistory := &ChatMessageHistory{}
 	if history != nil {
 		chatHistory.messages = *history
@@ -21,7 +21,7 @@ func NewBuffer(windowSize int, history *pipelm.ChatMessages) *Buffer {
 	return &Buffer{windowSize: windowSize, chatHistory: chatHistory}
 }
 
-func (b *Buffer) Load(_ context.Context) (pipelm.ChatMessages, error) {
+func (b *Buffer) Load(_ context.Context) (flowllm.ChatMessages, error) {
 	messages := b.chatHistory.GetMessages()
 	if b.windowSize > 0 {
 		messages = messages.Last(b.windowSize * 2)
